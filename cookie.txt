@@ -1,0 +1,5 @@
+# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+hvac.ecopm.cn	FALSE	/ecopm	FALSE		JSESSIONID	31DC119ADB0B1C9F8030B0B27EFD35A9
