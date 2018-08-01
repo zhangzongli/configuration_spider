@@ -55,6 +55,9 @@ coolingTowerList = []
 
 fileName = "result"
 
+# css内容
+soupCssStr = ''
+
 # 结果文件是否存在，存在则删除
 def removeExits():
     pathOfResult = "./" + fileName
@@ -108,6 +111,8 @@ def getResultToSql():
     soupConfig = BeautifulSoup(configResponse.read().decode(), features="html.parser")
 
     soupCss = BeautifulSoup(getReponse.read().decode(), features="html.parser")
+    global soupCssStr
+    soupCssStr = str(soupCss).replace("\r", "").replace("\n", "").replace("\t", "")
 
     # 获取map数据
     areaList = soupConfig.find_all("area")
@@ -131,24 +136,147 @@ def getResultToSql():
 
     # 获取隐藏悬浮窗的数据
     window = soupConfig.select('.configuration_alertmsg > div')
-    soupCssStr = str(soupCss).replace("\r", "").replace("\n", "").replace("\t", "")
+
     for div in window:
         className = str(div.attrs['class']).replace("[\'", "").replace("\']", "")
-        startData = str(re.findall(r'.'+className+'{(.*)}', soupCssStr))
-        data_json = json.dumps(startData[0:startData.find("}")].replace(";", ","))
-        width = data_json.width
+        index = int(re.findall(r'\d', className)[1])
+        dic = toDic(className)
+        width = dic['width']
+        top = dic['top']
+        if -1 != className.find("left"):
+            # 左侧冷冻泵
+            left = dic['left']
+            sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_left, css_top, css_width) VALUES (" + project_id + ", '" + str(
+                chilledPumpList[index - 1][0]) + "', 'CHILLED_PUMP_FLAG', 'window', '" + left + "', '" + top + "', '" + width + "');\n"
+        if -1 != className.find("right"):
+            # 右侧冷却泵
+            right = dic['right']
+            sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_right, css_top, css_width) VALUES (" + project_id + ", '" + str(
+                coolingPumpList[index - 1][0]) + "', 'COOLING_PUMP_FLAG', 'window','" + right + "', '" + top + "', '" + width + "');\n"
+        if -1 != className.find("cooler"):
+            # 中间主机
+            left = dic['left']
+            sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_left, css_top, css_width) VALUES (" + project_id + ", '" + str(
+                chillerList[index - 1][0]) + "', 'CHILLER_FLAG', 'window','" + left + "', '" + top + "', '" + width + "');\n"
+        if -1 != className.find("fan"):
+            # 上方冷却塔
+            left = dic['left']
+            sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_left, css_top, css_width) VALUES (" + project_id + ", '" + str(
+                coolingTowerList[index - 1][0]) + "', 'COOLING_TOWER_FLAG', 'window','" + left + "', '" + top + "', '" + width + "');\n"
 
+    # 获取状态图位置及偏移量数据
+    status = soupConfig.select(".configuration_states > span")
 
-    # testdiv = soup.select(".two_mlmhlgd_left_waterbump01")
+    for span in status:
+        className = str(span.attrs['class']).replace("[\'", "").replace("\']", "")
+        index = int(re.findall(r'\d', className)[1])
+        dic = toDic(className)
+        width = dic['width']
+        top = dic['top']
+        height = dic['height']
+        offset = -int(height)
+        background = dic['background']
+        url = background[background.find("("):background.find(")")].split("/")[-1]
+        background_size = re.findall(r'\d+\.?\d*', dic['background-size'])[0]
+        if -1 != className.find("left"):
+            # 左侧冷冻泵
+            left = dic['left']
+            if background_size:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_left, css_top, `offset`, background_size, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    chilledPumpList[index - 1][0]) + "', 'CHILLED_PUMP_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(
+                    background_size) + "', '" + str(url) + "');\n"
+            else:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_left, css_top, `offset`, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    chilledPumpList[index - 1][0]) + "', 'CHILLED_PUMP_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(url) + "');\n"
+        if -1 != className.find("right"):
+            # 右侧冷却泵
+            right = dic['right']
+            if background_size:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_right, css_top, `offset`, background_size, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    coolingPumpList[index - 1][0]) + "', 'COOLING_PUMP_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(
+                    background_size) + "', '" + str(url) + "');\n"
+            else:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_right, css_top, `offset`, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    coolingPumpList[index - 1][0]) + "', 'COOLING_PUMP_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(url) + "');\n"
+        if -1 != className.find("cooler"):
+            # 中间主机
+            left = dic['left']
+            if background_size:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_left, css_top, `offset`, background_size, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    chillerList[index - 1][0]) + "', 'CHILLER_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(
+                    background_size) + "', '" + str(url) + "');\n"
+            else:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_left, css_top, `offset`, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    chillerList[index - 1][0]) + "', 'CHILLER_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(url) + "');\n"
+        if -1 != className.find("fan"):
+            # 上方冷却塔
+            left = dic['left']
+            if background_size:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_left, css_top, `offset`, background_size, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    coolingTowerList[index - 1][0]) + "', 'COOLING_TOWER_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(
+                    background_size) + "', '" + str(url) + "');\n"
+            else:
+                sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_left, css_top, `offset`, pic_url)" \
+                                  " VALUES (" + project_id + ", '" + str(
+                    coolingTowerList[index - 1][0]) + "', 'COOLING_TOWER_FLAG', 'statusPic', '" + str(width) + "', '" + str(
+                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(url) + "');\n"
 
+    # 获取数字位置
+    num = soupConfig.select("."+ list(soupConfig.select(".num01")[0].parents)[0].attrs['class'][0] +" > div")
+    for div in num:
+        className = str(div.attrs['class'][0])
+        dic = toDic(className)
+        top = dic['top']
+        if 'num01' == className:
+            left = dic['left']
+            sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_left, css_top) VALUES (" + project_id + ", '1', 'chilledPipeReturnNumber', '" + str(
+                left) + "', '" + str(top) + "');\n"
+        if 'num02' == className:
+            left = dic['left']
+            sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_left, css_top) VALUES (" + project_id + ", '1', 'chilledPipeSupplyNumber', '" + str(
+                left) + "', '" + str(top) + "');\n"
+        if 'num03' == className:
+            left = dic['left']
+            sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_left, css_top) VALUES (" + project_id + ", '1', 'coolingPipeSupplyNumber', '" + str(
+                left) + "', '" + str(top) + "');\n"
+        if 'num04' == className:
+            right = dic['right']
+            sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_right, css_top) VALUES (" + project_id + ", '1', 'coolingPipeReturnNumber', '" + str(
+                right) + "', '" + str(top) + "');\n"
 
-    # print(getReponse.read().decode())
 
     file = open(fileName, "x", encoding='utf-8')
     file.write(sqlStr)
     file.close()
 
     return
+
+# 将某个标签的css样式转为字典
+def toDic(className):
+    dic = {}
+    startData = str(re.findall(r'.' + className + '{(.*)}', soupCssStr))
+    dataList = startData[2:startData.find("}")].split(";")
+    for data in dataList:
+        if -1 != data.find(":"):
+            attrList = data.split(":")
+            if 0 < len(attrList):
+                dic[attrList[0]] = attrList[1].replace("px", "")
+    return dic
+
 
 def getDeviceIdList():
     # 获取主机各设备id
@@ -183,4 +311,5 @@ if __name__ == "__main__":
     removeExits()
     getDeviceIdList()
     getResultToSql()
+    db.close()
     print("info: 我已经爬完啦，sql结果在./result文件中")
