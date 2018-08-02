@@ -199,7 +199,7 @@ def getResultToSql():
                 sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_right, css_top, `offset`, background_size, pic_url)" \
                                   " VALUES (" + project_id + ", '" + str(
                     coolingPumpList[index - 1][0]) + "', 'COOLING_PUMP_FLAG', 'statusPic', '" + str(width) + "', '" + str(
-                    height) + "', '" + str(left) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(
+                    height) + "', '" + str(right) + "', '" + str(top) + "', '" + str(offset) + "', '" + str(
                     background_size) + "', '" + str(url) + "');\n"
             else:
                 sqlStr = sqlStr + "insert into configuration_config (project_id, device_id, device_type_code, model, css_width, css_height, css_right, css_top, `offset`, pic_url)" \
@@ -238,22 +238,22 @@ def getResultToSql():
     # 获取数字位置
     num = soupConfig.select("."+ list(soupConfig.select(".num01")[0].parents)[0].attrs['class'][0] +" > div")
     for div in num:
-        className = str(div.attrs['class'][0])
+        className = list(soupConfig.select(".num01")[0].parents)[0].attrs['class'][0] + " ." +str(div.attrs['class'][0])
         dic = toDic(className)
         top = dic['top']
-        if 'num01' == className:
+        if -1 != className.find("num01"):
             left = dic['left']
             sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_left, css_top) VALUES (" + project_id + ", '1', 'chilledPipeReturnNumber', '" + str(
                 left) + "', '" + str(top) + "');\n"
-        if 'num02' == className:
+        if -1 != className.find("num02"):
             left = dic['left']
             sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_left, css_top) VALUES (" + project_id + ", '1', 'chilledPipeSupplyNumber', '" + str(
                 left) + "', '" + str(top) + "');\n"
-        if 'num03' == className:
+        if -1 != className.find("num03"):
             left = dic['left']
             sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_left, css_top) VALUES (" + project_id + ", '1', 'coolingPipeSupplyNumber', '" + str(
                 left) + "', '" + str(top) + "');\n"
-        if 'num04' == className:
+        if -1 != className.find("num04"):
             right = dic['right']
             sqlStr = sqlStr + "INSERT into configuration_config (project_id, device_id, model, css_right, css_top) VALUES (" + project_id + ", '1', 'coolingPipeReturnNumber', '" + str(
                 right) + "', '" + str(top) + "');\n"
