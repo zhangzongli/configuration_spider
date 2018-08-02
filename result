@@ -1,4 +1,4 @@
-insert into configuration_config (project_id, pic_url) VALUES (2, 'configuration_two_mlmhlgd.jpg' );
+insert into configuration_config (project_id, pic_url, model) VALUES (2, 'configuration_two_mlmhlgd.jpg', 'background' );
 insert into configuration_config (project_id, device_id, device_type_code, css_coords, model) VALUES (2, '3', 'CHILLED_PUMP_FLAG', '160,360,240,400', 'fixBox' );
 insert into configuration_config (project_id, device_id, device_type_code, css_coords, model) VALUES (2, '4', 'CHILLED_PUMP_FLAG', '50,550,130,590', 'fixBox' );
 insert into configuration_config (project_id, device_id, device_type_code, css_coords, model) VALUES (2, '1', 'COOLING_PUMP_FLAG', '1000,360,1080,410', 'fixBox' );

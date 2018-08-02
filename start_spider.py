@@ -68,7 +68,7 @@ def removeExits():
 # 获取爬到的结果，并转成2.0数据库所需sql
 def getResultToSql():
     # 插入组态图底图
-    sqlStr = "insert into configuration_config (project_id, pic_url) VALUES ("+project_id+", '"+configPicName+"' );\n"
+    sqlStr = "insert into configuration_config (project_id, pic_url, model) VALUES ("+project_id+", '"+configPicName+"', 'background' );\n"
     loginUrl = "https://hvac.ecopm.cn/ecopm/Index!zdindex.action"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'
